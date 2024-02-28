@@ -91,9 +91,14 @@ def shortest_path(source, target):
 
     If no possible path, returns None.
     """
+    initial_node = Node(state=source, parent=None action=None)
+    stackfrontier = StackFrontier()
+    stackfrontier.add(initial_node)
 
-    # TODO
-    raise NotImplementedError
+    queuefrontier = QueueFrontier(stackfrontier)
+
+    print(queuefrontier.empty())
+        
 
 
 def person_id_for_name(name):
