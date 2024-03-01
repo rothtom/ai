@@ -91,15 +91,26 @@ def shortest_path(source, target):
 
     If no possible path, returns None.
     """
-    initial_node = Node(state=source, parent=None action=None)
-    stackfrontier = StackFrontier()
-    stackfrontier.add(initial_node)
-
-    queuefrontier = QueueFrontier(stackfrontier)
-
-    print(queuefrontier.empty())
+    frontier = QueueFrontier()
+    initial_node = Node(state=source, parent=None, action=None)
+    frontier.add(initial_node)
+    explored = []
+    while frontier.empty() == False:
+        state = frontier.remove()
+        explored.append(state)
+        if state.state == target:
+            return path(state)
         
+        state_space = neighbors_for_person(state.state)
 
+        for new_state in state_space:
+            new_state = Node(state=new_state[1], parent=state, action=new_state[0])
+            if frontier.contains_state(new_state) == False and new_state.state not in explored:
+                frontier.add(new_state)
+                explored.append(new_state.state)
+                        
+    return None
+        
 
 def person_id_for_name(name):
     """
@@ -138,6 +149,16 @@ def neighbors_for_person(person_id):
         for person_id in movies[movie_id]["stars"]:
             neighbors.add((movie_id, person_id))
     return neighbors
+
+
+def path(node):
+    path = []
+    while node.parent != None:
+        step = (node.action, node.state)
+        path.append(step)
+        node = node.parent
+   
+    return list(reversed(path))
 
 
 if __name__ == "__main__":

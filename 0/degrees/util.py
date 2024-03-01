@@ -25,6 +25,10 @@ class StackFrontier():
             node = self.frontier[-1]
             self.frontier = self.frontier[:-1]
             return node
+    
+    def string(self):
+        for node in self.frontier:
+            return f"State: {node.state} \n Parent: {node.parent} \n Action: {node.action}"
 
 
 class QueueFrontier(StackFrontier):
