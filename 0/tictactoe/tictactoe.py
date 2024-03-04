@@ -18,21 +18,12 @@ class Node():
         self.state = state
         self.action = action
         self.parent = parent
-        self.children = []
         self.util = None
-        self.possibilities = actions(self.state)
-    
-    def remove(self):
-        possibilities = self.possibilities
-        possibility = possibilities[0]
-        possibilities.remove(possibilities[0])
-        self.possibilities = possibilities
-        return possibility
-    
-    def empty(self):
-        return len(self.possibilities) == 0
-    
 
+
+
+
+explored = []
 
 
 
@@ -133,93 +124,102 @@ def minimax(board):
     """
     Returns the optimal action for the current player on the board.
     """
-    state = Node(state=board, action=None, parent=None)
-    moves = []
-    p = player(state.state)
-    for action in actions(state.state):
-        state = Node(state=result(state.state, action), action=action, parent=state)
-        if p == O:
-            state.util = MIN(state).util
-        else:
-            state.util = MAX(state).util
-        moves.append({"action": state.action,
-                      "util": state.util})
+
+    state = Node(state=board, parent=None, action=None)
+    if explored == []:
+        MAX(state)
+    relevant = []
+    for exploration in explored:
+        if exploration.parent != None:
+            if exploration.parent.state == board:
+                print(exploration.parent.state)
+                relevant.append(exploration)
     
+    if relevant == []:
+        return actions(board)[0]
+    
+    
+
+    best_option = relevant[0] 
+
+    p = player(board)
     if p == O:
-        util = 2
-        for move in moves:
-            if move["util"] < util:
-                optimal_move = move["action"]
+        for state in relevant:   
+            if state.util > best_option.util:
+                best_option = state
+    
+    else:
+        for state in relevant:
+            if state.util < best_option.util:
+                best_option = state
 
-    elif p == X:
-        util = -2
-        for move in moves:
-            if move["util"] > util:
-                optimal_move = move["action"]
-
-
-
-    return optimal_move
-
-
-
-def MIN(state):
-    while state.possibilities != None:    
-        if state.empty():
-            state = state.parent
+    print(state.state)
+    return state.action
             
-        action = state.remove()
-        state = Node(state=result(state.state, action), action=action, parent=state)
-        state.parent.children.append(state)
-        print(state.state, state.parent.state, state.children)
-        util = MAX(state).util
-        state.util = 2
-        if util < state.util:
-            state.util = util
-        
-        if terminal(state.state) == True:
-            state.util = utility(state.state)
-            return state
-        
-        if state.possibilities == None:
-            return state
-
-
-    state.util = utility(state.state) 
-    return state
-    
-    
-
-    
-    
-
 
 
 
 
 def MAX(state):
-    while state.possibilities != None:
-        if state.empty():
-            state = state.parent
-        action = state.remove()
-        state = Node(state=result(state.state, action), action=action, parent=state)
-        state.parent.children.append(state)
-        print(state.state, state.parent.state, state.children)
-        util = MIN(state).util
-        state.util = -2
-        if util > state.util:
-            state.util = util
+    possible_actions = actions(state.state)
+    for possible_action in possible_actions:
+        new_state = Node(state=result(state.state, possible_action), parent=state, action=possible_action)
+        if terminal(new_state.state):
+            new_state.util = utility(new_state.state)
+            explored.append(new_state)
+            return new_state
         
-        if terminal(state.state) == True:
-            state.util = utility(state.state)
-            return state
-        
-        if state.possibilities == None:
-            return state
+        temp_util = MIN(new_state).util
+        if new_state.util == None:
+            new_state.util = -2
+
+        if temp_util < new_state.util:
+            new_state.util = temp_util
 
 
-    state.util = utility(state.state) 
+    
+    for possible_action in possible_actions:
+        new_state = Node(state=result(state.state, possible_action), parent=state, action=possible_action)
+        if new_state.util == None:
+            new_state.util = MIN(new_state).util
+    
+        if state.util == None:
+            state.util = -2
+        
+        if state.util < new_state.util:
+            state.util = new_state.util
+    
+    explored.append(state)
     return state
+
+def MIN(state):
+    possible_actions = actions(state.state)
+    for possible_action in possible_actions:
+        new_state = Node(state=result(state.state, possible_action), parent=state, action=possible_action)
+        if terminal(new_state.state):
+            new_state.util = utility(new_state.state)
+            explored.append(new_state)
+            return new_state
+        
+        temp_util = MIN(new_state).util
+        if new_state.util == None:
+            new_state.util = -2
+
+        if temp_util > new_state.util:
+            new_state.util = temp_util
+
+
     
+    for possible_action in possible_actions:
+        new_state = Node(state=result(state.state, possible_action), parent=state, action=possible_action)
+        if new_state.util == None:
+            new_state.util = MIN(new_state).util
     
+        if state.util == None:
+            state.util = 2
+        
+        if state.util > new_state.util:
+            state.util = new_state.util
     
+    explored.append(state)
+    return state

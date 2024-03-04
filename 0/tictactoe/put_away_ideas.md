@@ -1,3 +1,96 @@
+    state = Node(state=board, action=None, parent=None)
+    moves = []
+    p = player(state.state)
+    for action in actions(state.state):
+        state = Node(state=result(state.state, action), action=action, parent=state)
+        if p == O:
+            state.util = MIN(state).util
+        else:
+            state.util = MAX(state).util
+        moves.append({"action": state.action,
+                      "util": state.util})
+    
+    if p == O:
+        util = 2
+        for move in moves:
+            if move["util"] < util:
+                optimal_move = move["action"]
+
+    elif p == X:
+        util = -2
+        for move in moves:
+            if move["util"] > util:
+                optimal_move = move["action"]
+
+
+
+    return optimal_move
+
+
+
+def MIN(state):
+    for possibility in state.possibilities:    
+        
+        new_state = Node(state=result(state.state, possibility), action=possibility, parent=state)
+        new_state.parent.children.append(state)
+        print(new_state.state, new_state.parent.state, new_state.children)
+        util = MAX(new_state).util
+        new_state.util = 2
+        if util < new_state.util:
+            new_state.util = util
+        
+        if terminal(new_state.state) == True:
+            new_state.util = utility(new_state.state)
+            return state
+        
+    if terminal(state.state):
+        state.util = utility(state.state) 
+        return state
+    return MAX(state.parent)
+    
+    
+
+    
+    
+
+
+
+
+
+def MAX(state):
+    for possibility in state.possibilities:    
+        
+        new_state = Node(state=result(state.state, possibility), action=possibility, parent=state)
+        new_state.parent.children.append(state)
+        print(new_state.state, new_state.parent.state, new_state.children)
+        util = MAX(new_state).util
+        new_state.util = -2
+        if util > new_state.util:
+            new_state.util = util
+        
+        if terminal(new_state.state) == True:
+            new_state.util = utility(new_state.state)
+            return new_state
+        
+    if terminal(state.state):
+        state.util = utility(state.state) 
+        return state
+    return MAX(state.parent)
+    
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
     explored = Frontier()
     frontier = Frontier()
     state_now = Node(state=board, path=None, parent=None)
