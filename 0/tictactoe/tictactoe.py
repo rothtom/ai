@@ -18,17 +18,33 @@ class Node():
         self.state = state
         self.action = action
         self.parent = parent
+        self.children = []
         self.util = None
 
 
+class Frontier():
+    def __init__(self):
+        self.frontier = []
+
+    def empty(self):
+        return self.frontier == []
+    
+    def remove(self):
+        item = self.frontier[-1]
+        self.frontier.remove(item)
+        return item
+
+    def add(self, item):
+        self.frontier.append(item)
+
+    
+frontier = Frontier()
 
 
-explored = []
-
-
-
-
-
+class List():
+    def add(self, item):
+        if item not in self:
+            self.append(item)
 
 
 def initial_state():
@@ -69,7 +85,6 @@ def actions(board):
     return actions
 
 
-
 def result(board, action):
     """
     Returns the board that results from making move (i, j) on the board.
@@ -108,6 +123,7 @@ def terminal(board):
         return True
     return False
 
+
 def utility(board):
     """
     Returns 1 if X has won the game, -1 if O has won, 0 otherwise.
@@ -125,101 +141,68 @@ def minimax(board):
     Returns the optimal action for the current player on the board.
     """
 
-    state = Node(state=board, parent=None, action=None)    
-    MAX(state)
-    relevant = []
-    for exploration in explored:
-        if exploration.parent != None:
-            if exploration.parent.state == board:
-                print(exploration.parent.state)
-                relevant.append(exploration)
-    
-    if relevant == []:
-        print("No relevant moves!")
-        return actions(board)[0]
-    
-    
+    top_state = Node(state=board, parent=None, action=None)    
+    frontier.add(top_state)
+    top_state = load_every_state()
 
-    best_option = relevant[0] 
+    top_state = MAX(top_state)
 
-    p = player(board)
-    if p == O:
-        for state in relevant:   
-            if state.util > best_option.util:
-                best_option = state
+    best_state = Node(state=None, action=None, parent=top_state)
+
+    if player(board) == X:
+        best_state.util = -2
+        for state in top_state.children:
+            if state.util > best_state.util:
+                best_state = state
     
     else:
-        for state in relevant:
-            if state.util < best_option.util:
-                best_option = state
+        best_state.util = 2
+        for state in top_state.children:
+            if state.util < best_state.util:
+                best_state = state
 
-    print(state.state)
-    return state.action
-            
-
+    return best_state.action
 
 
+def load_every_state():
+    while frontier.empty() == False:
+        state = frontier.remove()
+        for action in actions(state.state):
+            new_state = Node(state=result(state.state, action), action=action, parent=state)
+            state.children.append(new_state)
+            frontier.add(new_state)
+    top_state = state
+    while top_state.parent != None:
+        top_state = top_state.parent
+    return top_state
+        
 
 def MAX(state):
-    possible_actions = actions(state.state)
-    for possible_action in possible_actions:
-        new_state = Node(state=result(state.state, possible_action), parent=state, action=possible_action)
-        if terminal(new_state.state):
-            new_state.util = utility(new_state.state)
-            explored.append(new_state)
-            return new_state
-        
-        temp_util = MIN(new_state).util
-        if new_state.util == None:
-            new_state.util = -2
+    if terminal(state.state):
+        state.util = utility(state.state)
+        return state
 
-        if temp_util < new_state.util:
-            new_state.util = temp_util
-
-
+    state.util = -2
+    for child in state.children:
+        if child.util == None:
+            child.util = MIN(child).util
+        if child.util > state.util:
+            state.util = child.util
     
-    for possible_action in possible_actions:
-        new_state = Node(state=result(state.state, possible_action), parent=state, action=possible_action)
-        if new_state.util == None:
-            new_state.util = MIN(new_state).util
-    
-        if state.util == None:
-            state.util = -2
-        
-        if state.util < new_state.util:
-            state.util = new_state.util
-    
-    explored.append(state)
     return state
+
 
 def MIN(state):
-    possible_actions = actions(state.state)
-    for possible_action in possible_actions:
-        new_state = Node(state=result(state.state, possible_action), parent=state, action=possible_action)
-        if terminal(new_state.state):
-            new_state.util = utility(new_state.state)
-            explored.append(new_state)
-            return new_state
-        
-        temp_util = MIN(new_state).util
-        if new_state.util == None:
-            new_state.util = 2
+    if terminal(state.state):
+        state.util = utility(state.state)
+        return state
 
-        if temp_util > new_state.util:
-            new_state.util = temp_util
-
-
+    state.util = 2
+    for child in state.children:
+        if child.util == None:
+            child.util = MAX(child).util
+        if child.util < state.util:
+            state.util = child.util
     
-    for possible_action in possible_actions:
-        new_state = Node(state=result(state.state, possible_action), parent=state, action=possible_action)
-        if new_state.util == None:
-            new_state.util = MIN(new_state).util
-    
-        if state.util == None:
-            state.util = 2
-        
-        if state.util > new_state.util:
-            state.util = new_state.util
-    
-    explored.append(state)
     return state
+        
