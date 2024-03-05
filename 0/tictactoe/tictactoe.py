@@ -125,9 +125,8 @@ def minimax(board):
     Returns the optimal action for the current player on the board.
     """
 
-    state = Node(state=board, parent=None, action=None)
-    if explored == []:
-        MAX(state)
+    state = Node(state=board, parent=None, action=None)    
+    MAX(state)
     relevant = []
     for exploration in explored:
         if exploration.parent != None:
@@ -136,6 +135,7 @@ def minimax(board):
                 relevant.append(exploration)
     
     if relevant == []:
+        print("No relevant moves!")
         return actions(board)[0]
     
     
@@ -203,7 +203,7 @@ def MIN(state):
         
         temp_util = MIN(new_state).util
         if new_state.util == None:
-            new_state.util = -2
+            new_state.util = 2
 
         if temp_util > new_state.util:
             new_state.util = temp_util
