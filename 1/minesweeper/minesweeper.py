@@ -189,29 +189,48 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
+
         # add cell to made moves:
         self.moves_made.add(cell)
+        self.mark_safe(cell)
 
         # add new sentence
+        kb_old = self.knowledge.copy()
         new_sentence = Sentence(cells=neighbours(cell), count=count)
+        print(new_sentence)
         self.knowledge.append(new_sentence)
+        
+        # do until nothing changes
+        while kb_old != self.knowledge:
+            # check for inference for every sentence in the KB
+            for sentence in self.knowledge:
+                if sentence.cells == set():
+                    self.knowledge.remove(sentence)
 
-        # check for inference for every sentence in the KB
-        for sentence in self.knowledge:
-            if mine := sentence.known_mines():
-                self.mark_mine(mine)
-                if mine not in self.mines:
-                    self.mines.add(mine)
+                mines = sentence.known_mines()
+                if mines != set():
+                    for mine in mines.copy():
+                        self.mark_mine(mine)      
 
-            if safe := sentence.known_safes():
-                self.mark_safe(safe)
-                if safe not in self.safes:
-                    self.safes.add(safe)
-
-            for sentence2 in self.knowledge:
-                if sentence2.cells.issubset(sentence.cells):
-                    self.knowledge.append(Sentence(cells=sentence.cells.difference(sentence2.cells),
-                                                   count=sentence.count - sentence2.count))
+                safes = sentence.known_safes()
+                if safes != set():
+                    for safe in safes.copy():
+                        self.mark_safe(safe)
+                
+                for sentence2 in self.knowledge.copy():
+                    
+                    if sentence2.cells.issubset(sentence.cells) and sentence != sentence2:
+                        if sentence2.cells == set():
+                            self.knowledge.remove(sentence2)
+                        new_sentence = Sentence(cells=sentence.cells.difference(
+                            sentence2.cells), count=sentence.count - sentence2.count)
+                        if new_sentence not in self.knowledge:
+                            self.knowledge.append(new_sentence)
+                            print(new_sentence)
+                kb_old = self.knowledge.copy()
+       
+        print("mines:", self.mines)
+        print("safes:", self.safes)
 
     def make_safe_move(self):
         """
@@ -234,21 +253,30 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        return (3, 3)
-        choices = [0, 1, 2, 3, 4, 5, 6, 7]
-        while True:
-            i = random.choice(choices)
-            j = random.choice(choices)
-            move = (i, j)
-            if move not in self.moves_made and move not in self.mines:
-                return move
+        board = Minesweeper()
+        all_moves = []
+        for i in range(board.width):
+            for j in range(board.height):
+                all_moves.append((i, j))
 
+        for mine in self.mines:
+            all_moves.remove(mine)
+
+        for move in self.moves_made:
+            all_moves.remove(move)
+        
+        if all_moves == []:
+            return None
+        
+        return random.choice(all_moves)
+        
 
 def neighbours(cell):
     neighbours = set()
     board = Minesweeper()
+    # why not + 1 aswell ?!               .
     for i in range(cell[0] - 1, cell[0] + 2):
         for j in range(cell[1] - 1, cell[1] + 2):
-            if (i, j) != cell and i >= 0 and i <= board.width and j >= 0 and j <= board.height:
+            if (i, j) != cell and i >= 0 and i < board.width and j >= 0 and j < board.height:
                 neighbours.add((i, j))
     return neighbours
