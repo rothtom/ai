@@ -3,6 +3,7 @@ import random
 import re
 import sys
 
+
 DAMPING = 0.85
 SAMPLES = 10000
 
@@ -57,7 +58,18 @@ def transition_model(corpus, page, damping_factor):
     linked to by `page`. With probability `1 - damping_factor`, choose
     a link at random chosen from all pages in the corpus.
     """
-    raise NotImplementedError
+    model = {}
+    # if page has no links
+    if len(corpus[page]) == 0:
+        for site in [*corpus]:
+            model[site] = round(float(1 / len(corpus)), 4)
+        return model
+        
+    for site in corpus:
+        model[site] = round(float((1 - damping_factor) / len(corpus)), 4)
+        if site in corpus[page]:
+            model[site] += round(float(damping_factor / len(corpus[page])), 4)
+    return model
 
 
 def sample_pagerank(corpus, damping_factor, n):
@@ -69,7 +81,33 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    pages = [*corpus]
+    sample = {}
+    for page in pages:
+        sample[page] = 0
+    
+    start = random.choice(pages)
+    
+    page = start
+    for _ in range(n):
+        new = transition_model(corpus, page, damping_factor)
+        
+        r = random.random()
+        area = 0.00
+        for i in range(len(corpus)):
+            area += new[pages[i]]
+            if r <= area:
+                page = pages[i]
+                break
+
+        sample[page] += 1 
+        
+    result = {}
+    # return sample do this for test
+    for i in range(len(corpus)):
+        result[pages[i]] = round(float(sample[pages[i]] / n), 4)
+   
+    return result
 
 
 def iterate_pagerank(corpus, damping_factor):
@@ -81,8 +119,40 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+  
+    for page in [*corpus]:
+        
+        if len(corpus[page]) == 0:
+            corpus[page] = set([*corpus])
+        
+        for link in [*corpus]:
+            if page == link:
+                linked = True
+        
+        if not linked:
+            for site in [*corpus]:
+                corpus[site] = corpus[site].add(site)
+            
+    pagerank = {}
+    for page in [*corpus]:
+        pagerank[page] = 1 / len(corpus)
+    
+    old = pagerank
+    items = len(corpus)
+    
+    while True:
+        new = sample_pagerank(corpus, damping_factor, SAMPLES)
+        for page in [*new]:
+            new[page] = round((old[page] + new[page]) / 2, 4)
+        same = 0
+        for page in [*corpus]:
+            if new[page] <= (old[page] + 0.001) and new[page] >= (old[page] - 0.001):
+                same += 1
+        if same == items:
+            return new
 
-
+        old = new
+        
+    
 if __name__ == "__main__":
     main()
