@@ -78,11 +78,13 @@ def main():
         # Loop over all sets of people who might have the gene
         for one_gene in powerset(names):
             for two_genes in powerset(names - one_gene):
-
                 # Update probabilities with new joint probability
                 p = joint_probability(people, one_gene, two_genes, have_trait)
                 update(probabilities, one_gene, two_genes, have_trait, p)
 
+    print(two_genes)
+    print(one_gene)
+        
     # Ensure probabilities sum to 1
     normalize(probabilities)
 
@@ -143,50 +145,61 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     """
     # print(people)
     # print([*people])
-    hidden = {}
-    # unconditional probabilities first:
-    for person in [*people]:
-        hidden[person] = {}
-        hidden[person]["gene"] = inherit(person, people, hidden)
+    joint = 1
+    hidden = {person: {"gene_count": None, "gene_probs": None, "trait": None, "trait_probs": None, "joint_probs": 0} for person in people}
+    # print(hidden)
+
+    for person in people:
+        if person in one_gene:
+            hidden[person]["gene_count"] = 1
+        elif person in two_genes:
+            hidden[person]["gene_count"] = 2
+        else:
+            hidden[person]["gene_count"] = 0
+        
+        hidden[person]["gene_probs"] = 0
+        
+        if person in have_trait:
+            hidden[person]["trait"] = True
+        else:
+            hidden[person]["trait"] = False
+    
+        
+    for person in people:
+        if not people[person]["mother"]:
+            hidden[person]["gene_probs"] = PROBS["gene"][hidden[person]["gene_count"]]
+            
+        else:
+            father = people[person]["father"]
+            mother = people[person]["mother"]
+
+            if mother in one_gene:
+                mother_prob = 0.99 * 0.1
+            elif mother in two_genes:
+                mother_prob = 0.99 * 0.99
+            else:
+                mother_prob = 0.01 * 0.01
+            
+            if father in one_gene:
+                father_prob = 0.99 * 0.1
+            elif father in two_genes:
+                father_prob = 0.99 * 0.99
+            else:
+                father_prob = 0.01 * 0.01
+
+            hidden[person]["gene_probs"] = father_prob + mother_prob
+        
+        hidden[person]["trait_probs"] = PROBS["trait"][hidden[person]["gene_count"]][hidden[person]["trait"]]
+        hidden[person]["joint_probs"] = hidden[person]["gene_probs"] * hidden[person]["trait_probs"]
+        joint = hidden[person]["joint_probs"] * joint
+
+
     
     print(hidden)
-    return hidden
-
-
-
-
-
-    for person in [*people]:
-        hidden[person] = {"gene": {0: 0, 1: 0, 2: 0}}
-        if not people[person]["mother"] and not people[person]["father"]:
-            for i in range(len(PROBS["gene"])):
-                hidden[person]["gene"][i] = PROBS["gene"][i]
-            print(hidden[person])
-        
-           
-        
-    
-        
-    for person in [*people]:
-        if mother := people[person]["mother"]:             
-            mothers_genes = hidden[mother]["gene"]
-            print(mothers_genes)
-            gene1 = {i: mothers_genes[i] * 0.5 for i in range(len(mothers_genes))}
-            print(gene1)
-        else:
-            gene1 = {i: PROBS["gene"][i] for i in range(len(PROBS["gene"]))}
-
-        if father := people[person]["father"]:
-            fathers_genes = hidden[father]["gene"]
-            print(fathers_genes)
-            gene2 = {i: fathers_genes[i] * 0.5 for i in range(len(fathers_genes))}
-            print(gene2)
-        
-        if person not in one_gene and person not in two_genes:
-            for gene in hidden[person]["gene"]:
-                hidden [person]["gene"][gene] = (gene1[gene] + gene2[gene]) * 0.5
-        
-        print(hidden[person])
+    return joint
+            
+            
+            
           
 
             
@@ -199,6 +212,7 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     Which value for each distribution is updated depends on whether
     the person is in `have_gene` and `have_trait`, respectively.
     """
+    return 0
     raise NotImplementedError
 
 
@@ -207,48 +221,11 @@ def normalize(probabilities):
     Update `probabilities` such that each probability distribution
     is normalized (i.e., sums to 1, with relative proportions the same).
     """
+    return 0
     raise NotImplementedError
 
 
-
-def inherit(person, people, hidden):
-    if mother := people[person]["mother"]:
-        try:
-            mothers_genes = hidden[mother]["genes"]
-        except KeyError:
-            mothers_genes = inherit(mother, people, hidden)
-
-        gene1 = mothers_genes
-    
-    else:
-        gene1 = {i: PROBS["gene"][i] for i in range(len(PROBS["gene"]))}
         
-    
-    if father := people[person]["father"]:
-        try:
-            fathers_genes = hidden[mother]["genes"]
-        except KeyError:
-            fathers_genes = inherit(father, people, hidden)
-        
-        gene2 = fathers_genes
-
-    else:
-        gene2 = {i: PROBS["gene"][i] for i in range(len(PROBS["gene"]))}
-
-    persons_genes = {}
-    for gene in [*gene1]:
-        persons_genes[gene] = (gene1[gene] + gene2[gene]) / 2
-    
-    return persons_genes
-        
-        
-
-
-
-def unconditional(person):
-    hidden = {}
-    hidden[person] = {"gene": {i: PROBS["gene"][i] for i in range(len(PROBS["gene"]))}}
-    return hidden
 
 
 if __name__ == "__main__":
