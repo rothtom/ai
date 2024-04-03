@@ -81,9 +81,6 @@ def main():
                 # Update probabilities with new joint probability
                 p = joint_probability(people, one_gene, two_genes, have_trait)
                 update(probabilities, one_gene, two_genes, have_trait, p)
-
-    print(two_genes)
-    print(one_gene)
         
     # Ensure probabilities sum to 1
     normalize(probabilities)
@@ -146,7 +143,8 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     # print(people)
     # print([*people])
     joint = 1
-    hidden = {person: {"gene_count": None, "gene_probs": None, "trait": None, "trait_probs": None, "joint_probs": 0} for person in people}
+    hidden = {person: {"gene_count": None, "gene_probs": None, "trait": None,
+                       "trait_probs": None, "joint_probs": 0} for person in people}
     # print(hidden)
 
     for person in people:
@@ -163,7 +161,6 @@ def joint_probability(people, one_gene, two_genes, have_trait):
             hidden[person]["trait"] = True
         else:
             hidden[person]["trait"] = False
-    
         
     for person in people:
         if not people[person]["mother"]:
@@ -174,35 +171,25 @@ def joint_probability(people, one_gene, two_genes, have_trait):
             mother = people[person]["mother"]
 
             if mother in one_gene:
-                mother_prob = 0.99 * 0.1
+                mother_prob = (1 - PROBS["mutation"]) * PROBS["mutation"]
             elif mother in two_genes:
-                mother_prob = 0.99 * 0.99
+                mother_prob = (1 - PROBS["mutation"]) * (1 - PROBS["mutation"])
             else:
-                mother_prob = 0.01 * 0.01
+                mother_prob = PROBS["mutation"] * PROBS["mutation"]
             
             if father in one_gene:
-                father_prob = 0.99 * 0.1
+                father_prob = (1 - PROBS["mutation"]) * PROBS["mutation"]
             elif father in two_genes:
-                father_prob = 0.99 * 0.99
+                father_prob = (1 - PROBS["mutation"]) * (1 - PROBS["mutation"])
             else:
-                father_prob = 0.01 * 0.01
+                father_prob = PROBS["mutation"] * PROBS["mutation"]
 
             hidden[person]["gene_probs"] = father_prob + mother_prob
         
         hidden[person]["trait_probs"] = PROBS["trait"][hidden[person]["gene_count"]][hidden[person]["trait"]]
         hidden[person]["joint_probs"] = hidden[person]["gene_probs"] * hidden[person]["trait_probs"]
         joint = hidden[person]["joint_probs"] * joint
-
-
-    
-    print(hidden)
     return joint
-            
-            
-            
-          
-
-            
 
 
 def update(probabilities, one_gene, two_genes, have_trait, p):
@@ -212,8 +199,20 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     Which value for each distribution is updated depends on whether
     the person is in `have_gene` and `have_trait`, respectively.
     """
+    for person in probabilities:
+        if person in one_gene:
+            probabilities[person]["gene"][1] += p
+        elif person in two_genes:
+            probabilities[person]["gene"][2] += p
+        else:
+            probabilities[person]["gene"][0] += p
+
+        if person in have_trait:
+            probabilities[person]["trait"][True] += p
+        else:
+            probabilities[person]["trait"][False] += p
+
     return 0
-    raise NotImplementedError
 
 
 def normalize(probabilities):
@@ -221,11 +220,18 @@ def normalize(probabilities):
     Update `probabilities` such that each probability distribution
     is normalized (i.e., sums to 1, with relative proportions the same).
     """
-    return 0
-    raise NotImplementedError
-
-
+    for person in probabilities:
+        sum = 0
+        for i in range(len(PROBS["gene"])):
+            sum += probabilities[person]["gene"][i]
         
+        for i in range(len(PROBS["gene"])):
+            probabilities[person]["gene"][i] = probabilities[person]["gene"][i] / sum
+        
+        sum = 0
+        sum = probabilities[person]["trait"][True] + probabilities[person]["trait"][False]
+        probabilities[person]["trait"][True] = probabilities[person]["trait"][True] / sum
+        probabilities[person]["trait"][False] = probabilities[person]["trait"][False] / sum
 
 
 if __name__ == "__main__":
