@@ -189,6 +189,7 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
+        new_sentence = Sentence(cells=neighbours(cell), count=count)
 
         # add cell to made moves:
         self.moves_made.add(cell)
@@ -196,12 +197,13 @@ class MinesweeperAI():
 
         # add new sentence
         kb_old = self.knowledge.copy()
-        new_sentence = Sentence(cells=neighbours(cell), count=count)
+        
         print(new_sentence)
         self.knowledge.append(new_sentence)
         
         # do until nothing changes
         while kb_old != self.knowledge:
+            kb_old = self.knowledge.copy()
             # check for inference for every sentence in the KB
             for sentence in self.knowledge:
                 if sentence.cells == set():
@@ -227,7 +229,7 @@ class MinesweeperAI():
                         if new_sentence not in self.knowledge:
                             self.knowledge.append(new_sentence)
                             print(new_sentence)
-                kb_old = self.knowledge.copy()
+                
        
         print("mines:", self.mines)
         print("safes:", self.safes)
