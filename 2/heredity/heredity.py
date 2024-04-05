@@ -142,6 +142,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     """
     # print(people)
     # print([*people])
+  
     joint = 1
     hidden = {person: {"gene_count": None, "gene_probs": None, "trait": None,
                        "trait_probs": None, "joint_probs": 0} for person in people}
@@ -157,11 +158,14 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         
         hidden[person]["gene_probs"] = 0
         
+        
         if person in have_trait:
             hidden[person]["trait"] = True
         else:
             hidden[person]["trait"] = False
         
+        # print(hidden[person]["trait"])
+              
     for person in people:
         if not people[person]["mother"]:
             hidden[person]["gene_probs"] = PROBS["gene"][hidden[person]["gene_count"]]
@@ -171,24 +175,33 @@ def joint_probability(people, one_gene, two_genes, have_trait):
             mother = people[person]["mother"]
 
             if mother in one_gene:
-                mother_prob = (1 - PROBS["mutation"]) * PROBS["mutation"]
+                mother_prob = 0.5
             elif mother in two_genes:
-                mother_prob = (1 - PROBS["mutation"]) * (1 - PROBS["mutation"])
+                mother_prob = (1 - PROBS["mutation"])
             else:
-                mother_prob = PROBS["mutation"] * PROBS["mutation"]
+                mother_prob = PROBS["mutation"]
             
             if father in one_gene:
-                father_prob = (1 - PROBS["mutation"]) * PROBS["mutation"]
+                father_prob = 0.5
             elif father in two_genes:
-                father_prob = (1 - PROBS["mutation"]) * (1 - PROBS["mutation"])
+                father_prob = (1 - PROBS["mutation"]) 
             else:
-                father_prob = PROBS["mutation"] * PROBS["mutation"]
+                father_prob = PROBS["mutation"] 
 
-            hidden[person]["gene_probs"] = father_prob + mother_prob
-        
+            if hidden[person]["gene_count"] == 2:
+                hidden[person]["gene_probs"] = father_prob * mother_prob
+            elif hidden[person]["gene_count"] == 1:
+                hidden[person]["gene_probs"] = ((1 - mother_prob) * father_prob) + (mother_prob * (1 - father_prob))
+            else:
+                hidden[person]["gene_probs"] = (1 - mother_prob) * (1 - father_prob)
         hidden[person]["trait_probs"] = PROBS["trait"][hidden[person]["gene_count"]][hidden[person]["trait"]]
         hidden[person]["joint_probs"] = hidden[person]["gene_probs"] * hidden[person]["trait_probs"]
+        print(hidden[person]["trait"])
         joint = hidden[person]["joint_probs"] * joint
+        print(joint)
+    # print(hidden[person]["gene_count"])
+        # print(hidden[person]["trait"])
+    # print(hidden[person]["trait_probs"])
     return joint
 
 
