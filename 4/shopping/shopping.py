@@ -59,7 +59,38 @@ def load_data(filename):
     labels should be the corresponding list of labels, where each label
     is 1 if Revenue is true, and 0 otherwise.
     """
-    raise NotImplementedError
+    with open(filename) as f:
+        reader = csv.DictReader(f)
+        evidence = []
+        label = []
+        for row in reader:
+            e = []
+            e.append(int(row["Administrative"]))
+            e.append(float(row["Administrative_Duration"]))
+            e.append(int(row["Informational"]))
+            e.append(float(row["Informational_Duration"]))
+            e.append(int(row["ProductRelated"]))
+            e.append(float(row["ProductRelated_Duration"]))
+            e.append(float(row["BounceRates"]))
+            e.append(float(row["ExitRates"]))
+            e.append(float(row["PageValues"]))
+            e.append(float(row["SpecialDay"]))
+            months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            for i in range(len(months)):
+                if months[i] == row["Month"]:
+                    e.append(i)
+                    break
+            e.append(int(row["OperatingSystems"]))
+            e.append(int(row["Browser"]))
+            e.append(int(row["Region"]))
+            e.append(int(row["TrafficType"]))
+            e.append(int(1 if row["VisitorType"] == "Returning_Visitor" else 0))
+            e.append(int(1 if row["Weekend"] == "TRUE" else 0))
+            evidence.append(e)
+            label.append(int(1 if row["Revenue"] == "TRUE" else 0))
+        
+    tuple = (evidence, label)
+    return tuple
 
 
 def train_model(evidence, labels):
@@ -67,7 +98,9 @@ def train_model(evidence, labels):
     Given a list of evidence lists and a list of labels, return a
     fitted k-nearest neighbor model (k=1) trained on the data.
     """
-    raise NotImplementedError
+    trainer = KNeighborsClassifier(n_neighbors=1)
+    trained = trainer.fit(evidence, labels)
+    return trained
 
 
 def evaluate(labels, predictions):
@@ -85,7 +118,25 @@ def evaluate(labels, predictions):
     representing the "true negative rate": the proportion of
     actual negative labels that were accurately identified.
     """
-    raise NotImplementedError
+    buys = 0
+    leaves = 0
+    predicted_buys = 0
+    predicted_leaves = 0
+    for prediction, label in zip(predictions, labels):
+        if label == 0:
+            buys += 1
+        else:
+            leaves += 1
+
+        if prediction == label:
+            if label == 0:
+                predicted_buys += 1
+            else:
+                predicted_leaves += 1
+    specificity = predicted_buys / buys
+    sensitivity = predicted_leaves / leaves
+    tuple = (sensitivity, specificity)
+    return tuple 
 
 
 if __name__ == "__main__":
