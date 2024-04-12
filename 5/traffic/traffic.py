@@ -58,29 +58,24 @@ def load_data(data_dir):
     be a list of integer labels, representing the categories for each of the
     corresponding `images`.
     """
+    # shfit for image
     abspath = os.path.abspath(__file__)
     abspath = os.path.split(abspath)[0]
     dname = os.path.dirname(os.path.join(abspath, data_dir))
-    i = 0
     imgs = []
     labels = []
-    while True:
+    for i in range(NUM_CATEGORIES):
         d = os.path.join(dname, str(i))
         if not os.path.exists(d):
-            break
-        i += 1
+            pass
         for file in os.listdir(d):
+            labels.append(i)
             img = cv2.imread(os.path.join(d, file))
+            img = cv2.resize(img, (IMG_HEIGHT, IMG_WIDTH), interpolation=cv2.INTER_LINEAR)
             imgs.append(img)
-            label = os.path.dirname(d)
-            labels.append(label)
-    
-    print(tuple(imgs, labels))
-    return tuple(imgs, labels)
+    print("data loaded!")
+    return (imgs, labels)
                 
-
-        
-
 
 def get_model():
     """
@@ -88,7 +83,30 @@ def get_model():
     `input_shape` of the first layer is `(IMG_WIDTH, IMG_HEIGHT, 3)`.
     The output layer should have `NUM_CATEGORIES` units, one for each category.
     """
-    raise NotImplementedError
+    model = tf.keras.models.Sequential([
+        tf.keras.layers.Conv3D(
+            32, (3, 3), activation="relu", input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)
+        ),
+
+        tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
+
+        tf.keras.layers.Flatten(),
+
+
+        tf.keras.layers.Dense(1024, activation="relu"),
+        tf.keras.layers.Dropout(0.5),
+
+        tf.keras.layers.Dense(256, activation="relu"),
+
+        tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")
+    ])
+    model.summary()
+    model.compile(
+        optimizer="adam",
+        loss="categorical_crossentropy",
+        metrics=["accuracy"]
+    )
+    return model
 
 
 if __name__ == "__main__":
