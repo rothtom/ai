@@ -62,18 +62,19 @@ def load_data(data_dir):
     abspath = os.path.abspath(__file__)
     abspath = os.path.split(abspath)[0]
     dname = os.path.dirname(os.path.join(abspath, data_dir))
+    dname = data_dir
     imgs = []
     labels = []
     for i in range(NUM_CATEGORIES):
         d = os.path.join(dname, str(i))
         if not os.path.exists(d):
             pass
+
         for file in os.listdir(d):
             labels.append(i)
             img = cv2.imread(os.path.join(d, file))
             img = cv2.resize(img, (IMG_HEIGHT, IMG_WIDTH), interpolation=cv2.INTER_LINEAR)
             imgs.append(img)
-    print("data loaded!")
     return (imgs, labels)
                 
 
@@ -93,8 +94,8 @@ def get_model():
         tf.keras.layers.Flatten(),
 
 
-        tf.keras.layers.Dense(768, activation="relu"),
-        tf.keras.layers.Dropout(0.4),
+        # tf.keras.layers.Dense(768, activation="relu"),
+        # tf.keras.layers.Dropout(0.4),
 
         tf.keras.layers.Dense(512, activation="relu"),
         tf.keras.layers.Dropout(0.5),
