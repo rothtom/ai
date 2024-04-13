@@ -65,7 +65,6 @@ def get_color_for_attention_score(attention_score):
     return (hex, hex, hex)
 
 
-
 def visualize_attentions(tokens, attentions):
     """
     Produce a graphical representation of self-attention scores.
@@ -77,10 +76,7 @@ def visualize_attentions(tokens, attentions):
     (starting count from 1).
     """
     # TODO: Update this function to produce diagrams for all layers and heads.
-    print(len(attentions))
-    print(tokens)
     for i in range(len(attentions)):
-        print(len(attentions[i][0]))
         for k in range(len(attentions[i][0])):
             generate_diagram(
                 i,
